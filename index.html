@@ -1,0 +1,702 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1530">
+  <title>PokéForge</title>
+  <style>
+:root {
+  --bg: #0b1530;
+  --surface: #111d3f;
+  --surface-2: #17264d;
+  --anthracite: #2a2f3a;
+  --border: #243560;
+  --text: #ffffff;
+  --muted: #9fb0d4;
+  --accent: #38d0f0;
+  --accent-2: #7cc4ff;
+  --danger: #e5546b;
+  --ok: #3fd6a0;
+  --radius: 14px;
+  --shadow: 0 6px 20px rgba(0, 0, 0, .28);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.5; }
+img, canvas { image-rendering: pixelated; }
+a { color: inherit; text-decoration: none; }
+h1, h2, h3, h4 { margin: 0 0 .4em; font-weight: 600; letter-spacing: -.01em; }
+h1 { font-size: 1.15rem; margin: 0; }
+p { margin: 0 0 .7em; }
+.muted { color: var(--muted); }
+.small { font-size: .82rem; }
+
+.shell { display: grid; grid-template-columns: 260px 1fr; height: 100vh; height: 100dvh; }
+.sidebar { background: #08112a; border-right: 1px solid var(--border); padding: 18px 12px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+.brand { font-weight: 700; font-size: 1.1rem; padding: 4px 10px; display: flex; gap: 8px; align-items: center; }
+.logo { color: var(--accent); }
+#nav { display: flex; flex-direction: column; gap: 2px; }
+.nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 10px; color: var(--muted); transition: background .15s, color .15s; }
+.nav-item span { flex: 1; }
+.nav-item:hover { background: var(--surface); color: var(--text); }
+.nav-item.active { background: var(--surface-2); color: var(--text); box-shadow: inset 2px 0 0 var(--accent); }
+.foot { margin-top: auto; padding: 0 10px; }
+
+.content { display: flex; flex-direction: column; min-width: 0; }
+.topbar { display: flex; align-items: center; gap: 12px; padding: 14px 24px; border-bottom: 1px solid var(--border); }
+.main { flex: 1; overflow-y: auto; padding: 24px; }
+.view { max-width: 1100px; margin: 0 auto; animation: fade .25s ease; }
+@keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.loading { color: var(--muted); padding: 24px; }
+
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow); margin-bottom: 16px; }
+.hero { background: linear-gradient(135deg, var(--surface-2), var(--surface)); }
+.section-title { margin: 22px 0 10px; font-size: .85rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.grid .card { margin: 0; }
+.tool { display: flex; flex-direction: column; gap: 4px; transition: transform .15s, border-color .15s; }
+.tool:hover { transform: translateY(-2px); border-color: var(--accent); }
+.tool-icon { width: 40px; height: 40px; border-radius: 10px; background: var(--anthracite); color: var(--accent); display: grid; place-items: center; margin-bottom: 6px; }
+.tool-icon.big { width: 60px; height: 60px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+.stat { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; }
+.stat b { font-size: 1.4rem; color: var(--accent); }
+.stat span { color: var(--muted); font-size: .82rem; }
+.stub { text-align: center; padding: 40px 20px; }
+.stub .tool-icon { margin: 0 auto 12px; }
+
+.pill { align-self: flex-start; font-size: .7rem; padding: 2px 8px; border-radius: 99px; background: var(--anthracite); color: var(--muted); }
+.pill.ok { background: rgba(63, 214, 160, .15); color: var(--ok); }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font: inherit; cursor: pointer; transition: background .15s, border-color .15s; }
+.btn:hover { border-color: var(--accent); }
+.btn-primary { background: var(--accent); color: #04202a; border-color: var(--accent); font-weight: 600; }
+.btn-danger:hover { border-color: var(--danger); color: var(--danger); }
+.icon-btn { display: none; padding: 6px 10px; }
+.input { background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 10px; padding: 8px 12px; font: inherit; min-width: 0; }
+.input:focus, .btn:focus-visible, .nav-item:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.row.end { justify-content: flex-end; margin-top: 14px; }
+.toolbar { display: flex; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.toolbar .input:first-child { flex: 1; min-width: 160px; }
+.row-item { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding: 12px 16px; margin-bottom: 10px; }
+.grow { flex: 1; min-width: 160px; }
+
+.dialog { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; max-width: 380px; }
+.dialog::backdrop { background: rgba(3, 8, 22, .7); }
+#toasts { position: fixed; right: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 50; }
+.toast { background: var(--surface-2); border: 1px solid var(--border); border-left: 3px solid var(--accent); padding: 10px 14px; border-radius: 10px; box-shadow: var(--shadow); animation: fade .2s; max-width: 320px; }
+.toast-ok { border-left-color: var(--ok); }
+.toast-error { border-left-color: var(--danger); }
+.toast.out { opacity: 0; transition: opacity .35s; }
+
+.scrim { display: none; }
+@media (max-width: 800px) {
+  .shell { grid-template-columns: 1fr; }
+  .sidebar { position: fixed; inset: 0 auto 0 0; width: 270px; z-index: 30; transform: translateX(-100%); transition: transform .2s; }
+  .nav-open .sidebar { transform: none; }
+  .nav-open .scrim { display: block; position: fixed; inset: 0; background: rgba(3, 8, 22, .6); z-index: 20; }
+  .icon-btn { display: inline-flex; }
+  .topbar { padding: 10px 14px; }
+  .main { padding: 14px; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+  <div id="shell" class="shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="logo">◆</span> PokéForge</div>
+      <nav id="nav" aria-label="Navigation principale"></nav>
+      <p class="foot muted small">Pour Essentials v21.1 · RPG Maker XP</p>
+    </aside>
+    <div id="scrim" class="scrim"></div>
+    <div class="content">
+      <header class="topbar">
+        <button id="menu-btn" class="btn icon-btn" aria-label="Ouvrir le menu">☰</button>
+        <h1 id="page-title">Accueil</h1>
+      </header>
+      <main id="main" class="main"></main>
+    </div>
+  </div>
+  <noscript>PokéForge nécessite JavaScript.</noscript>
+  <script type="module">
+// ===== js/core/zip.js =====
+// Générateur ZIP minimal (méthode "stockée", sans compression) — aucune dépendance.
+// files : [{ path: "POISSON/face/POISSON.png", data: Uint8Array | string }]
+
+const enc = new TextEncoder();
+
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+
+function crc32(bytes) {
+  let c = 0xffffffff;
+  for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xff] ^ (c >>> 8);
+  return (c ^ 0xffffffff) >>> 0;
+}
+
+function dosDateTime(d) {
+  const time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+  const date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  return { time, date };
+}
+
+function createZip(files, now = new Date()) {
+  const { time, date } = dosDateTime(now);
+  const chunks = [];
+  const central = [];
+  let offset = 0;
+
+  for (const f of files) {
+    const name = enc.encode(f.path.replace(/\\/g, "/").replace(/^\/+/, ""));
+    const data = typeof f.data === "string" ? enc.encode(f.data) : f.data;
+    const crc = crc32(data);
+
+    const local = new DataView(new ArrayBuffer(30));
+    local.setUint32(0, 0x04034b50, true);
+    local.setUint16(4, 20, true);
+    local.setUint16(6, 0x0800, true); // noms en UTF-8
+    local.setUint16(8, 0, true); // stockée
+    local.setUint16(10, time, true);
+    local.setUint16(12, date, true);
+    local.setUint32(14, crc, true);
+    local.setUint32(18, data.length, true);
+    local.setUint32(22, data.length, true);
+    local.setUint16(26, name.length, true);
+    local.setUint16(28, 0, true);
+    chunks.push(new Uint8Array(local.buffer), name, data);
+
+    const cd = new DataView(new ArrayBuffer(46));
+    cd.setUint32(0, 0x02014b50, true);
+    cd.setUint16(4, 20, true);
+    cd.setUint16(6, 20, true);
+    cd.setUint16(8, 0x0800, true);
+    cd.setUint16(10, 0, true);
+    cd.setUint16(12, time, true);
+    cd.setUint16(14, date, true);
+    cd.setUint32(16, crc, true);
+    cd.setUint32(20, data.length, true);
+    cd.setUint32(24, data.length, true);
+    cd.setUint16(28, name.length, true);
+    cd.setUint32(42, offset, true);
+    central.push(new Uint8Array(cd.buffer), name);
+
+    offset += 30 + name.length + data.length;
+  }
+
+  const cdSize = central.reduce((n, c) => n + c.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  end.setUint32(0, 0x06054b50, true);
+  end.setUint16(8, files.length, true);
+  end.setUint16(10, files.length, true);
+  end.setUint32(12, cdSize, true);
+  end.setUint32(16, offset, true);
+
+  return new Blob([...chunks, ...central, new Uint8Array(end.buffer)], { type: "application/zip" });
+}
+
+// Utilitaire : data URL (png...) -> Uint8Array
+function dataUrlToBytes(url) {
+  const bin = atob(url.split(",")[1]);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+
+// ===== js/core/ui.js =====
+// Utilitaires d'interface : création de DOM sans innerHTML (pas d'injection), toasts, dialogues, téléchargement.
+
+function el(tag, attrs = {}, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") n.className = v;
+    else if (k.startsWith("on") && typeof v === "function") n.addEventListener(k.slice(2), v);
+    else if (v === true) n.setAttribute(k, "");
+    else n.setAttribute(k, v);
+  }
+  for (const kid of kids.flat()) {
+    if (kid == null || kid === false) continue;
+    n.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  }
+  return n;
+}
+
+const ICONS = {
+  home: "M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10",
+  library: "M4 4h4v16H4zM10 4h4v16h-4zM16 6l4-1 3 15-4 1z",
+  sprite: "M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z",
+  anim: "M4 5h16v14H4zM9 9l6 3-6 3z",
+  sound: "M4 10v4h4l5 4V6L8 10zM16 9a4 4 0 010 6M18.5 6.5a8 8 0 010 11",
+  battle: "M5 19l8-8M13 11l5-5V3h-3l-5 5M19 19l-8-8M11 11L6 6V3h3l5 5",
+  trainer: "M12 12a4 4 0 100-8 4 4 0 000 8zM4 21a8 8 0 0116 0",
+  badge: "M12 3l2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.3 6.8 19.1l1-5.8L3.5 9.2l5.9-.9z",
+  box: "M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10",
+  card: "M3 6h18v12H3zM7 10h4v4H7zM14 10h4M14 14h4",
+  gem: "M6 4h12l4 6-10 11L2 10zM2 10h20M9 4l3 6 3-6M12 10v11",
+  gym: "M3 21h18M5 21V10l7-6 7 6v11M10 21v-6h4v6",
+  settings: "M12 15a3 3 0 100-6 3 3 0 000 6zM19 12a7 7 0 00-.1-1.2l2-1.5-2-3.4-2.3.9a7 7 0 00-2-1.2L14 3h-4l-.6 2.6a7 7 0 00-2 1.2l-2.3-.9-2 3.4 2 1.5A7 7 0 005 12c0 .4 0 .8.1 1.2l-2 1.5 2 3.4 2.3-.9a7 7 0 002 1.2L10 21h4l.6-2.6a7 7 0 002-1.2l2.3.9 2-3.4-2-1.5c.1-.4.1-.8.1-1.2z",
+  menu: "M4 6h16M4 12h16M4 18h16",
+  download: "M12 4v12m0 0l-4-4m4 4l4-4M5 20h14",
+  upload: "M12 16V4m0 0L8 8m4-4l4 4M5 20h14",
+  trash: "M5 7h14M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3",
+  check: "M5 12l5 5 9-10",
+};
+
+function icon(name, size = 20) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("width", size);
+  svg.setAttribute("height", size);
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("stroke", "currentColor");
+  svg.setAttribute("stroke-width", "1.8");
+  svg.setAttribute("stroke-linecap", "round");
+  svg.setAttribute("stroke-linejoin", "round");
+  svg.setAttribute("aria-hidden", "true");
+  const p = document.createElementNS("http://www.w3.org/2000/svg", "path");
+  p.setAttribute("d", ICONS[name] || ICONS.box);
+  svg.append(p);
+  return svg;
+}
+
+function toast(message, kind = "info") {
+  let host = document.getElementById("toasts");
+  if (!host) {
+    host = el("div", { id: "toasts", "aria-live": "polite" });
+    document.body.append(host);
+  }
+  const t = el("div", { class: `toast toast-${kind}` }, message);
+  host.append(t);
+  setTimeout(() => t.classList.add("out"), 3600);
+  setTimeout(() => t.remove(), 4000);
+}
+
+function confirmDialog(message, okLabel = "Confirmer") {
+  return new Promise((resolve) => {
+    const dlg = el("dialog", { class: "dialog" });
+    const done = (v) => { dlg.close(); dlg.remove(); resolve(v); };
+    dlg.append(
+      el("p", {}, message),
+      el("div", { class: "row end" },
+        el("button", { class: "btn", onclick: () => done(false) }, "Annuler"),
+        el("button", { class: "btn btn-primary", onclick: () => done(true) }, okLabel))
+    );
+    dlg.addEventListener("cancel", () => done(false));
+    document.body.append(dlg);
+    dlg.showModal();
+  });
+}
+
+function download(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = el("a", { href: url, download: filename });
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+function pickFile(accept) {
+  return new Promise((resolve) => {
+    const input = el("input", { type: "file", accept });
+    input.addEventListener("change", () => resolve(input.files[0] || null));
+    input.click();
+  });
+}
+
+const readText = (file) => file.text();
+
+function fmtBytes(n) {
+  if (n < 1024) return `${n} o`;
+  if (n < 1048576) return `${(n / 1024).toFixed(1)} Ko`;
+  return `${(n / 1048576).toFixed(1)} Mo`;
+}
+
+
+// ===== js/core/db.js =====
+// Stockage persistant (IndexedDB) : créations de toute nature + réglages.
+// Les images/sons sont stockés en data URL pour que l'export du projet reste un simple JSON.
+
+const DB_NAME = "pokeforge";
+const DB_VERSION = 1;
+let dbPromise = null;
+
+const TYPES = {
+  pokemon: "Pokémon",
+  fakemon: "Fakémon",
+  sprite: "Sprites",
+  animation: "Animations",
+  cry: "Cris",
+  trainer: "Dresseurs",
+  card: "Cartes",
+  badge: "Badges",
+  team: "Équipes",
+  gym: "Arènes",
+  item: "Objets",
+  megagem: "Méga-Gemmes",
+};
+
+function open() {
+  if (dbPromise) return dbPromise;
+  dbPromise = new Promise((resolve, reject) => {
+    if (!("indexedDB" in window)) return reject(new Error("IndexedDB indisponible dans ce navigateur."));
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains("creations")) {
+        db.createObjectStore("creations", { keyPath: "id" }).createIndex("type", "type");
+      }
+      if (!db.objectStoreNames.contains("settings")) db.createObjectStore("settings");
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+  return dbPromise;
+}
+
+async function run(store, mode, fn) {
+  const db = await open();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(store, mode);
+    const req = fn(tx.objectStore(store));
+    tx.oncomplete = () => resolve(req ? req.result : undefined);
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  });
+}
+
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+
+const db = {
+  /** Crée ou met à jour une création. Retourne l'objet enregistré. */
+  async save(item) {
+    const now = Date.now();
+    const rec = { ...item, id: item.id || uid(), createdAt: item.createdAt || now, updatedAt: now };
+    if (!TYPES[rec.type]) throw new Error(`Type de création inconnu : ${rec.type}`);
+    await run("creations", "readwrite", (s) => s.put(rec));
+    return rec;
+  },
+  get: (id) => run("creations", "readonly", (s) => s.get(id)),
+  async list(type) {
+    const all = await run("creations", "readonly", (s) => s.getAll());
+    return (type ? all.filter((c) => c.type === type) : all).sort((a, b) => b.updatedAt - a.updatedAt);
+  },
+  remove: (id) => run("creations", "readwrite", (s) => s.delete(id)),
+  async rename(id, name) {
+    const c = await this.get(id);
+    if (!c) throw new Error("Création introuvable.");
+    return this.save({ ...c, name });
+  },
+  async duplicate(id) {
+    const c = await this.get(id);
+    if (!c) throw new Error("Création introuvable.");
+    const { id: _i, createdAt: _c, ...rest } = c;
+    return this.save({ ...rest, name: `${c.name} (copie)` });
+  },
+  async counts() {
+    const all = await this.list();
+    const out = Object.fromEntries(Object.keys(TYPES).map((k) => [k, 0]));
+    for (const c of all) out[c.type] = (out[c.type] || 0) + 1;
+    return out;
+  },
+
+  getSetting: (k) => run("settings", "readonly", (s) => s.get(k)),
+  setSetting: (k, v) => run("settings", "readwrite", (s) => s.put(v, k)),
+
+  /** Export complet du projet (JSON sérialisable). */
+  async exportProject() {
+    const creations = await this.list();
+    const settings = {};
+    const db_ = await open();
+    await new Promise((res, rej) => {
+      const tx = db_.transaction("settings", "readonly");
+      const st = tx.objectStore("settings");
+      const rq = st.openCursor();
+      rq.onsuccess = () => {
+        const c = rq.result;
+        if (c) { settings[c.key] = c.value; c.continue(); }
+      };
+      tx.oncomplete = res;
+      tx.onerror = () => rej(tx.error);
+    });
+    return { app: "pokeforge", schema: 1, exportedAt: new Date().toISOString(), creations, settings };
+  },
+
+  /** Import : mode "merge" (ajoute/écrase par id) ou "replace" (vide d'abord). */
+  async importProject(data, mode = "merge") {
+    if (!data || data.app !== "pokeforge" || !Array.isArray(data.creations)) {
+      throw new Error("Ce fichier n'est pas une sauvegarde PokéForge valide.");
+    }
+    if (mode === "replace") await run("creations", "readwrite", (s) => s.clear());
+    for (const c of data.creations) {
+      if (!c || !c.id || !TYPES[c.type]) continue;
+      await run("creations", "readwrite", (s) => s.put(c));
+    }
+    for (const [k, v] of Object.entries(data.settings || {})) await this.setSetting(k, v);
+    return data.creations.length;
+  },
+
+  async wipe() {
+    await run("creations", "readwrite", (s) => s.clear());
+    await run("settings", "readwrite", (s) => s.clear());
+  },
+};
+
+
+// ===== pages/home =====
+
+
+async function render_home(root, { routes }) {
+  const counts = await db.counts();
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+
+  root.append(
+    el("section", { class: "hero card" },
+      el("h2", {}, "Vos ressources Pokémon, au même endroit"),
+      el("p", { class: "muted" }, "Outils de création pour RPG Maker XP et Pokémon Essentials v21.1. Tout fonctionne dans le navigateur ; vos créations sont enregistrées sur cet appareil."),
+      el("p", { class: "muted" }, total === 0 ? "Aucune création pour l'instant." : `${total} création${total > 1 ? "s" : ""} enregistrée${total > 1 ? "s" : ""}.`)
+    ),
+    el("h3", { class: "section-title" }, "Outils"),
+    el("div", { class: "grid" },
+      routes.filter((r) => r.id !== "home").map((r) =>
+        el("a", { class: "card tool", href: `#/${r.id}` },
+          el("div", { class: "tool-icon" }, icon(r.icon, 22)),
+          el("h4", {}, r.label),
+          el("p", { class: "muted" }, r.desc || (r.id === "library" ? "Retrouver, renommer, dupliquer, exporter vos créations." : "Sauvegarde, import/export du projet, stockage.")),
+          el("span", { class: `pill ${r.status === "ready" ? "ok" : ""}` }, r.status === "ready" ? "disponible" : `étape ${r.step}`)
+        ))
+    ),
+    el("h3", { class: "section-title" }, "Mes créations"),
+    el("div", { class: "stats" },
+      Object.entries(TYPES).map(([k, label]) =>
+        el("a", { class: "stat", href: `#/library` }, el("b", {}, counts[k] || 0), el("span", {}, label)))
+    )
+  );
+}
+
+
+// ===== pages/stub =====
+
+async function render_stub(root, { route }) {
+  root.append(
+    el("div", { class: "card stub" },
+      el("div", { class: "tool-icon big" }, icon(route.icon, 30)),
+      el("h2", {}, route.label),
+      el("p", { class: "muted" }, route.desc),
+      el("p", {}, `Cet outil n'est pas encore construit : il sera réalisé à l'étape ${route.step} du plan. Aucune fonction factice n'est affichée en attendant.`),
+      el("a", { class: "btn", href: "#/home" }, "Retour à l'accueil")
+    )
+  );
+}
+
+
+// ===== pages/library =====
+
+
+async function render_library(root) {
+  let filter = "all";
+  let query = "";
+  const listHost = el("div", { class: "list" });
+
+  async function refresh() {
+    const items = (await db.list(filter === "all" ? null : filter)).filter((c) =>
+      c.name.toLowerCase().includes(query.toLowerCase()));
+    if (!items.length) {
+      listHost.replaceChildren(el("div", { class: "card muted" },
+        "Aucune création ici pour le moment. Les outils (sprites, badges, dresseurs…) y enregistreront leurs résultats au fur et à mesure de leur construction."));
+      return;
+    }
+    listHost.replaceChildren(...items.map(row));
+  }
+
+  const row = (c) =>
+    el("div", { class: "card row-item" },
+      el("div", { class: "grow" },
+        el("b", {}, c.name),
+        el("div", { class: "muted small" }, `${TYPES[c.type]} · modifié le ${new Date(c.updatedAt).toLocaleString("fr-FR")}`)),
+      el("button", { class: "btn", onclick: () => rename(c) }, "Renommer"),
+      el("button", { class: "btn", onclick: async () => { await db.duplicate(c.id); toast("Création dupliquée."); refresh(); } }, "Dupliquer"),
+      el("button", { class: "btn", onclick: () => download(new Blob([JSON.stringify(c, null, 2)], { type: "application/json" }), `${c.name}.json`) }, "Exporter"),
+      el("button", { class: "btn btn-danger", "aria-label": "Supprimer", onclick: () => remove(c) }, icon("trash", 16))
+    );
+
+  async function rename(c) {
+    const name = prompt("Nouveau nom :", c.name);
+    if (name && name.trim()) { await db.rename(c.id, name.trim()); refresh(); }
+  }
+  async function remove(c) {
+    if (await confirmDialog(`Supprimer « ${c.name} » ? Cette action est définitive.`, "Supprimer")) {
+      await db.remove(c.id); toast("Création supprimée."); refresh();
+    }
+  }
+
+  const select = el("select", { class: "input", onchange: (e) => { filter = e.target.value; refresh(); } },
+    el("option", { value: "all" }, "Toutes les catégories"),
+    Object.entries(TYPES).map(([k, v]) => el("option", { value: k }, v)));
+  const search = el("input", { class: "input", type: "search", placeholder: "Rechercher…", oninput: (e) => { query = e.target.value; refresh(); } });
+
+  root.append(el("div", { class: "toolbar" }, search, select), listHost);
+  await refresh();
+}
+
+
+// ===== pages/settings =====
+
+
+async function render_settings(root) {
+  const storageLine = el("p", { class: "muted" }, "Calcul de l'espace utilisé…");
+  const persistLine = el("p", { class: "muted" });
+
+  async function refreshStorage() {
+    if (navigator.storage?.estimate) {
+      const { usage = 0, quota = 0 } = await navigator.storage.estimate();
+      storageLine.textContent = `Espace utilisé : ${fmtBytes(usage)}${quota ? ` sur ${fmtBytes(quota)} disponibles` : ""}.`;
+    } else storageLine.textContent = "Estimation de l'espace indisponible sur ce navigateur.";
+    if (navigator.storage?.persisted) {
+      persistLine.textContent = (await navigator.storage.persisted())
+        ? "Stockage protégé : le navigateur ne l'effacera pas automatiquement."
+        : "Stockage non protégé : le navigateur peut l'effacer s'il manque de place. Pensez à exporter régulièrement.";
+    }
+  }
+
+  const exportBtn = el("button", { class: "btn btn-primary", onclick: async () => {
+    const data = await db.exportProject();
+    const stamp = new Date().toISOString().slice(0, 10);
+    download(new Blob([JSON.stringify(data)], { type: "application/json" }), `pokeforge-projet-${stamp}.json`);
+    toast(`${data.creations.length} création(s) exportée(s).`, "ok");
+  } }, icon("download", 16), "Exporter le projet");
+
+  async function doImport(mode) {
+    const file = await pickFile(".json,application/json");
+    if (!file) return;
+    try {
+      if (mode === "replace" && !(await confirmDialog("Remplacer toutes vos créations actuelles par celles du fichier ?", "Remplacer"))) return;
+      const n = await db.importProject(JSON.parse(await readText(file)), mode);
+      toast(`${n} création(s) importée(s).`, "ok");
+      refreshStorage();
+    } catch (e) {
+      toast(e instanceof SyntaxError ? "Fichier JSON illisible." : e.message, "error");
+    }
+  }
+
+  root.append(
+    el("div", { class: "card" },
+      el("h3", {}, "Sauvegarde du projet"),
+      el("p", { class: "muted" }, "Vos créations sont enregistrées dans ce navigateur (IndexedDB). Elles survivent à la fermeture, mais pas à un effacement des données du site : exportez régulièrement."),
+      el("div", { class: "row" },
+        exportBtn,
+        el("button", { class: "btn", onclick: () => doImport("merge") }, icon("upload", 16), "Importer (fusionner)"),
+        el("button", { class: "btn", onclick: () => doImport("replace") }, "Importer (remplacer tout)"))
+    ),
+    el("div", { class: "card" },
+      el("h3", {}, "Stockage"),
+      storageLine, persistLine,
+      el("button", { class: "btn", onclick: async () => {
+        if (!navigator.storage?.persist) return toast("Non pris en charge par ce navigateur.", "error");
+        toast((await navigator.storage.persist()) ? "Stockage protégé." : "Le navigateur a refusé la demande.");
+        refreshStorage();
+      } }, "Demander la protection du stockage")
+    ),
+    el("div", { class: "card" },
+      el("h3", {}, "Zone sensible"),
+      el("p", { class: "muted" }, "Supprime définitivement toutes les créations et tous les réglages de cet appareil."),
+      el("button", { class: "btn btn-danger", onclick: async () => {
+        if (await confirmDialog("Tout effacer ? Pensez à exporter le projet avant.", "Tout effacer")) {
+          await db.wipe(); toast("Données effacées."); refreshStorage();
+        }
+      } }, "Tout effacer")
+    )
+  );
+  refreshStorage();
+}
+
+
+// ===== registry =====
+// Registre des pages. Pour ajouter un outil : créer js/pages/<outil>.js (export render(root, ctx))
+// puis passer son statut à "ready" ici. Les outils pas encore construits restent marqués "planned"
+// et affichent une page d'état honnête (aucun faux bouton).
+
+const routes = [
+  { id: "home", label: "Accueil", icon: "home", status: "ready", load: () => Promise.resolve({ render: render_home }) },
+  { id: "pokedex", label: "Bibliothèque Pokémon", icon: "library", status: "planned", step: 3, desc: "Pokémon générations 1 à 9 et Fakémon, filtres, recherche, évolutions et formes." },
+  { id: "sprites", label: "Générateur de sprites", icon: "sprite", status: "planned", step: 4, desc: "Dos, shiny et icônes à partir d'un sprite, bandes multi-frames, export ZIP." },
+  { id: "animations", label: "Éditeur d'animations", icon: "anim", status: "planned", step: 5, desc: "Animations pixel art frame par frame, parties du sprite séparables, annuler/rétablir." },
+  { id: "cries", label: "Générateur de cris", icon: "sound", status: "planned", step: 6, desc: "Synthèse sonore originale (Web Audio), écoute, comparaison et export WAV." },
+  { id: "battle", label: "Simulateur de combat", icon: "battle", status: "planned", step: 6, desc: "Aperçu visuel d'un combat, sans système de combat réel." },
+  { id: "trainers", label: "Créateur de dresseurs", icon: "trainer", status: "planned", step: 9, desc: "Dresseurs, équipes de 6, dialogues et export vers Essentials v21.1." },
+  { id: "cards", label: "Créateur de cartes", icon: "card", status: "planned", step: 10, desc: "Cartes de dresseurs horizontales, aperçu en direct, export PNG haute qualité." },
+  { id: "badges", label: "Créateur de badges", icon: "badge", status: "planned", step: 8, desc: "Badges par formes et motifs combinables, éditeur pixel art, collection de 8." },
+  { id: "items", label: "Gestionnaire d'objets", icon: "gem", status: "planned", step: 7, desc: "Objets officiels et personnalisés, Méga-Gemmes, import ZIP, code Ruby et PBS." },
+  { id: "gyms", label: "Arènes et Ligue", icon: "gym", status: "planned", step: 12, desc: "Arènes, champions, Conseil 4, Maître de la Ligue et progression." },
+  { id: "library", label: "Bibliothèque de créations", icon: "box", status: "ready", load: () => Promise.resolve({ render: render_library }) },
+  { id: "settings", label: "Paramètres", icon: "settings", status: "ready", load: () => Promise.resolve({ render: render_settings }) },
+];
+
+const stubPage = () => Promise.resolve({ render: render_stub });
+
+
+// ===== main =====
+
+
+const nav = document.getElementById("nav");
+const main = document.getElementById("main");
+const title = document.getElementById("page-title");
+const shell = document.getElementById("shell");
+
+routes.forEach((r) => {
+  nav.append(
+    el("a", { class: "nav-item", href: `#/${r.id}`, "data-id": r.id },
+      icon(r.icon), el("span", {}, r.label),
+      r.status === "planned" ? el("small", { class: "pill" }, "bientôt") : null)
+  );
+});
+
+document.getElementById("menu-btn").addEventListener("click", () => shell.classList.toggle("nav-open"));
+document.getElementById("scrim").addEventListener("click", () => shell.classList.remove("nav-open"));
+
+let token = 0;
+async function navigate() {
+  const id = location.hash.replace(/^#\//, "") || "home";
+  const route = routes.find((r) => r.id === id) || routes[0];
+  const mine = ++token;
+  shell.classList.remove("nav-open");
+  nav.querySelectorAll(".nav-item").forEach((a) => a.classList.toggle("active", a.dataset.id === route.id));
+  title.textContent = route.label;
+  document.title = `${route.label} · PokéForge`;
+  main.replaceChildren(el("div", { class: "loading" }, "Chargement…"));
+  try {
+    const mod = await (route.load ? route.load() : stubPage());
+    if (mine !== token) return;
+    const view = el("div", { class: "view" });
+    await mod.render(view, { route, routes });
+    if (mine !== token) return;
+    main.replaceChildren(view);
+    main.scrollTop = 0;
+  } catch (err) {
+    console.error(err);
+    if (mine !== token) return;
+    main.replaceChildren(el("div", { class: "card" }, el("h2", {}, "Erreur"), el("p", {}, err.message || String(err))));
+    toast("Une erreur est survenue : " + (err.message || err), "error");
+  }
+}
+
+window.addEventListener("hashchange", navigate);
+window.addEventListener("error", (e) => toast("Erreur : " + e.message, "error"));
+window.addEventListener("unhandledrejection", (e) => toast("Erreur : " + (e.reason?.message || e.reason), "error"));
+navigate();
+
+</script>
+</body>
+</html>
